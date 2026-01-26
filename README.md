@@ -24,10 +24,10 @@ It also handles cleanup and PR creation when you're done.
 
 ## Installation
 
-### Via Claude Plugins (Recommended)
+### Via Claude Marketplace (Recommended)
 
 ```bash
-claude plugins add harris21/laravel-herd-worktree
+/plugin install laravel-herd-worktree@harris-laravel-tools
 ```
 
 ### Manual Installation
@@ -110,6 +110,20 @@ Plus a Herd site at `http://feature-branch.test`
 - Restart Vite from worktree
 
 See the skill's "Common Issues" section for complete troubleshooting.
+
+## Publishing (For Maintainers)
+
+To add this skill to the Claude marketplace:
+
+```bash
+/plugin marketplace add harris21/laravel-herd-worktree
+```
+
+To update an already installed plugin:
+
+```bash
+/plugin update laravel-herd-worktree@harris-laravel-tools
+```
 
 ## License
 
