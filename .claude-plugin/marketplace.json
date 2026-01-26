@@ -10,7 +10,10 @@
   "plugins": [
     {
       "name": "laravel-herd-worktree",
-      "source": ".",
+      "source": {
+        "source": "github",
+        "repo": "harris21/laravel-herd-worktree"
+      },
       "description": "Set up git worktrees for Laravel projects with Laravel Herd integration",
       "version": "1.0.0",
       "author": {
