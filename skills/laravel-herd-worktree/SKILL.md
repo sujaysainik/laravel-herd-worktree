@@ -75,20 +75,20 @@ echo "SESSION_SECURE_COOKIE=false" >> /path/to/worktree/.env
 **Before running composer install, ask the user:**
 
 ```
-question: "Do you need to ignore any platform requirements for composer?"
+question: "Would you like to add any flags to composer install?"
 header: "Composer"
 options:
   - label: "No flags needed (Recommended)"
-    description: "Run composer install without platform requirement flags"
-  - label: "Ignore all platform reqs"
-    description: "Use --ignore-platform-reqs to skip all platform checks"
-  - label: "Custom flags"
-    description: "I'll provide specific flags to ignore"
+    description: "Run 'composer install --no-interaction' with no additional flags"
+  - label: "Add custom flags"
+    description: "I'll provide specific flags (e.g., --ignore-platform-reqs, --ignore-platform-req=ext-something)"
 ```
 
+If user selects "Add custom flags", ask them to provide the flags they want to use.
+
 ```bash
-# Install PHP dependencies (adjust flags based on user response)
-composer install --no-interaction  # Add --ignore-platform-reqs if user selected it
+# Install PHP dependencies (add user-provided flags if any)
+composer install --no-interaction  # Append user's custom flags here if provided
 
 # Install Node.js dependencies
 npm install
@@ -144,9 +144,29 @@ npm run dev
 
 ## Finishing Work (Integrating Back to Main Tree)
 
-When development is complete and you want to integrate the worktree changes:
+When development is complete and you want to integrate the worktree changes, **first ask the user how they want to proceed:**
 
-### 0. Gather Information
+```
+question: "How would you like to finish your worktree changes?"
+header: "Finish Work"
+options:
+  - label: "Create PR from worktree (Recommended)"
+    description: "Commit, push, and create a PR directly from the worktree branch"
+  - label: "Transfer to main directory"
+    description: "Merge changes into the main project directory, then clean up the worktree"
+  - label: "Abandon changes"
+    description: "Discard all changes and remove the worktree"
+```
+
+**Tell the user:** "When you're ready to finish your work, run `/laravel-herd-worktree` again and I'll help you integrate or clean up your changes."
+
+---
+
+### Option A: Create PR from Worktree
+
+Use this when you want to keep changes isolated and create a PR directly from the worktree.
+
+#### A.0. Gather Information
 
 **Before proceeding, use AskUserQuestion to ask:**
 
@@ -174,7 +194,7 @@ options:
     description: "Create PR with no description"
 ```
 
-### 1. Commit All Changes
+#### A.1. Commit All Changes
 
 ```bash
 cd /path/to/project/.worktrees/$BRANCH_NAME
@@ -182,7 +202,7 @@ git add -A
 git commit -m "Your commit message (#TASK_NUMBER)"  # Omit (#TASK_NUMBER) if none provided
 ```
 
-### 2. Rename Branch with Task Number (if provided)
+#### A.2. Rename Branch with Task Number (if provided)
 
 If a task number was provided and the branch doesn't include it:
 
@@ -190,7 +210,7 @@ If a task number was provided and the branch doesn't include it:
 git branch -m old-branch-name TASK_NUMBER-descriptive-name
 ```
 
-### 3. Push and Create PR
+#### A.3. Push and Create PR
 
 **Note:** The base branch defaults to `develop`. Adjust to your project's default branch (e.g., `main` or `master`) if different. You can detect the default branch with:
 ```bash
@@ -206,7 +226,7 @@ git push -u origin BRANCH_NAME
 gh pr create --base $DEFAULT_BRANCH --title "Description (#TASK_NUMBER)" --body "$BODY"
 ```
 
-### 4. Cleanup After Merge
+#### A.4. Cleanup After Merge
 
 After the PR is merged, clean up the worktree:
 
@@ -221,7 +241,77 @@ git worktree remove .worktrees/$BRANCH_NAME
 git branch -d TASK_NUMBER-branch-name  # Delete local branch
 ```
 
-## Cleanup (When Done)
+---
+
+### Option B: Transfer Changes to Main Directory
+
+Use this when you want to bring your worktree changes back into the main project directory, review them there, and then commit/push from the main directory.
+
+#### B.1. Confirm Transfer
+
+**Ask the user to confirm:**
+```
+question: "This will merge your worktree branch into the main directory. Continue?"
+header: "Confirm"
+options:
+  - label: "Yes, transfer changes"
+    description: "Merge the worktree branch into the main project and clean up"
+  - label: "Cancel"
+    description: "Go back without transferring"
+```
+
+#### B.2. Stop Vite and Prepare
+
+```bash
+# Stop Vite if running in worktree
+pkill -f "node.*vite" 2>/dev/null
+
+# Navigate to main project directory
+cd /path/to/main/project
+```
+
+#### B.3. Merge Worktree Branch
+
+```bash
+# Fetch and merge the worktree branch into current branch
+git merge $BRANCH_NAME --no-commit --no-ff
+```
+
+The `--no-commit` flag stages the changes without committing, allowing the user to review and commit manually. The `--no-ff` ensures a merge commit is created for clarity.
+
+**If merge conflicts occur:**
+- Inform the user about the conflicts
+- List the conflicting files
+- Ask if they want to resolve them now or abort
+
+#### B.4. Clean Up Worktree
+
+After the merge is staged:
+
+```bash
+# Unlink from Herd
+herd unlink $BRANCH_NAME
+
+# Remove the worktree
+git worktree remove .worktrees/$BRANCH_NAME
+
+# Delete the worktree branch (it's now merged)
+git branch -D $BRANCH_NAME
+```
+
+#### B.5. Final Steps
+
+**Inform the user:**
+"Your changes have been merged into the main directory and are staged for commit. The worktree has been cleaned up.
+
+You can now:
+- Review the changes with `git status` and `git diff --cached`
+- Commit when ready with `git commit`
+- Or unstage specific files if needed with `git reset HEAD <file>`"
+
+---
+
+### Option C: Abandon Changes
 
 When abandoning a worktree without merging:
 
