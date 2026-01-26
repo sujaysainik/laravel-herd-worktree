@@ -12,11 +12,25 @@ Sets up a git worktree for Laravel projects served by Laravel Herd, ensuring the
 
 **Announce at start:** "I'm using the laravel-herd-worktree skill to set up an isolated Laravel workspace with Herd."
 
+## IMPORTANT: User Interaction Guidelines
+
+**ALWAYS use the `AskUserQuestion` tool for ALL user interactions.** Never stop and wait for user reply. The AskUserQuestion tool allows the workflow to continue seamlessly.
+
+All question blocks in this skill (shown in YAML-like format) should be implemented using the AskUserQuestion tool with the specified options.
+
 ## When to Use
 
 - User wants to work on a feature branch in isolation
 - User mentions "worktree" and the project uses Laravel Herd
 - Starting work on a task that needs isolation from main branch
+
+## Initial Flow
+
+1. **First, check if any worktrees already exist** using `git worktree list`
+2. **If worktrees exist**, immediately use AskUserQuestion to ask if they want to:
+   - Set up a new worktree
+   - Finish work on an existing worktree (then ask which one and proceed to "Finishing Work" section)
+3. **If no worktrees exist**, use AskUserQuestion to ask for the branch name, then proceed with setup
 
 ## Prerequisites
 
@@ -28,6 +42,25 @@ Sets up a git worktree for Laravel projects served by Laravel Herd, ensuring the
 
 ## Setup Steps
 
+### 0. Get Branch Name
+
+**Use AskUserQuestion to get the branch name:**
+
+```
+AskUserQuestion:
+  question: "What branch name would you like to use for this worktree?"
+  header: "Branch Name"
+  options:
+    - label: "feature/new-feature"
+      description: "Generic feature branch - you can provide a custom name"
+    - label: "bugfix/fix-issue"
+      description: "Bugfix branch pattern"
+    - label: "experiment/test"
+      description: "Experimental/testing branch"
+```
+
+**Note:** The branch name will be sanitized for the Herd link (slashes replaced with dashes). For example, `feature/new-feature` becomes `feature-new-feature.test`.
+
 ### 1. Create Worktree (if needed)
 
 ```bash
@@ -35,7 +68,7 @@ Sets up a git worktree for Laravel projects served by Laravel Herd, ensuring the
 git worktree list | grep "$BRANCH_NAME"
 
 # If not, create it
-git worktree add .worktrees/$BRANCH_NAME -b $BRANCH_NAME
+git worktree add .worktrees/$SANITIZED_BRANCH_NAME -b $BRANCH_NAME
 ```
 
 ### 2. Link with Laravel Herd
@@ -72,16 +105,19 @@ echo "SESSION_SECURE_COOKIE=false" >> /path/to/worktree/.env
 
 **CRITICAL: Worktrees do NOT share vendor/ or node_modules/ with the main project.**
 
-**Before running composer install, ask the user:**
+**Use AskUserQuestion before running composer install:**
 
 ```
-question: "Would you like to add any flags to composer install?"
-header: "Composer"
-options:
-  - label: "No flags needed (Recommended)"
-    description: "Run 'composer install --no-interaction' with no additional flags"
-  - label: "Add custom flags"
-    description: "I'll provide specific flags (e.g., --ignore-platform-reqs, --ignore-platform-req=ext-something)"
+AskUserQuestion:
+  question: "Would you like to add any flags to composer install?"
+  header: "Composer"
+  options:
+    - label: "No flags needed (Recommended)"
+      description: "Run 'composer install --no-interaction' with no additional flags"
+    - label: "Add --ignore-platform-req=ext-mailparse"
+      description: "Ignore the mailparse extension requirement (common issue)"
+    - label: "Add custom flags"
+      description: "I'll provide specific flags"
 ```
 
 If user selects "Add custom flags", ask them to provide the flags they want to use.
@@ -144,21 +180,22 @@ npm run dev
 
 ## Finishing Work (Integrating Back to Main Tree)
 
-When development is complete and you want to integrate the worktree changes, **first ask the user how they want to proceed:**
+When development is complete and you want to integrate the worktree changes, **immediately use AskUserQuestion** to ask how they want to proceed:
 
 ```
-question: "How would you like to finish your worktree changes?"
-header: "Finish Work"
-options:
-  - label: "Create PR from worktree (Recommended)"
-    description: "Commit, push, and create a PR directly from the worktree branch"
-  - label: "Transfer to main directory"
-    description: "Merge changes into the main project directory, then clean up the worktree"
-  - label: "Abandon changes"
-    description: "Discard all changes and remove the worktree"
+AskUserQuestion:
+  question: "How would you like to finish your worktree changes?"
+  header: "Finish Work"
+  options:
+    - label: "Create PR from worktree (Recommended)"
+      description: "Commit, push, and create a PR directly from the worktree branch"
+    - label: "Transfer to main directory"
+      description: "Merge changes into the main project directory, then clean up the worktree"
+    - label: "Abandon changes"
+      description: "Discard all changes and remove the worktree"
 ```
 
-**Tell the user:** "When you're ready to finish your work, run `/laravel-herd-worktree` again and I'll help you integrate or clean up your changes."
+**After setup completes, tell the user:** "When you're ready to finish your work, run `/laravel-herd-worktree` again and I'll help you integrate or clean up your changes."
 
 ---
 
@@ -168,30 +205,27 @@ Use this when you want to keep changes isolated and create a PR directly from th
 
 #### A.0. Gather Information
 
-**Before proceeding, use AskUserQuestion to ask:**
+**Use AskUserQuestion to gather information (can ask multiple questions at once):**
 
-**Question 1 - Task Identifier:**
 ```
-question: "Do you have a task/issue number for this work?"
-header: "Task ID"
-options:
-  - label: "No task number"
-    description: "Skip adding a task identifier to the branch and commit"
-  - label: "Enter task number"
-    description: "I'll provide a task/issue number to include in the branch name and commit"
-```
-
-**Question 2 - PR Description:**
-```
-question: "How would you like to handle the PR description?"
-header: "PR Body"
-options:
-  - label: "I'll write it"
-    description: "Create PR with empty body - I'll fill in the description on GitHub"
-  - label: "Generate for me"
-    description: "Analyze the changes and generate a PR description automatically"
-  - label: "Leave empty"
-    description: "Create PR with no description"
+AskUserQuestion:
+  questions:
+    - question: "Do you have a task/issue number for this work?"
+      header: "Task ID"
+      options:
+        - label: "No task number"
+          description: "Skip adding a task identifier to the branch and commit"
+        - label: "Enter task number"
+          description: "I'll provide a task/issue number to include in the branch name and commit"
+    - question: "How would you like to handle the PR description?"
+      header: "PR Body"
+      options:
+        - label: "I'll write it"
+          description: "Create PR with empty body - I'll fill in the description on GitHub"
+        - label: "Generate for me"
+          description: "Analyze the changes and generate a PR description automatically"
+        - label: "Leave empty"
+          description: "Create PR with no description"
 ```
 
 #### A.1. Commit All Changes
@@ -249,15 +283,16 @@ Use this when you want to bring your worktree changes back into the main project
 
 #### B.1. Confirm Transfer
 
-**Ask the user to confirm:**
+**Use AskUserQuestion to confirm:**
 ```
-question: "This will merge your worktree branch into the main directory. Continue?"
-header: "Confirm"
-options:
-  - label: "Yes, transfer changes"
-    description: "Merge the worktree branch into the main project and clean up"
-  - label: "Cancel"
-    description: "Go back without transferring"
+AskUserQuestion:
+  question: "This will merge your worktree branch into the main directory. Continue?"
+  header: "Confirm"
+  options:
+    - label: "Yes, transfer changes"
+      description: "Merge the worktree branch into the main project and clean up"
+    - label: "Cancel"
+      description: "Go back without transferring"
 ```
 
 #### B.2. Stop Vite and Prepare
