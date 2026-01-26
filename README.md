@@ -27,7 +27,7 @@ It also handles cleanup and PR creation when you're done.
 ### Via Claude Marketplace (Recommended)
 
 ```bash
-/plugin install laravel-herd-worktree@harris-laravel-tools
+/plugin install laravel-herd-worktree@harrisrafto-laravel-tools
 ```
 
 ### Manual Installation
@@ -122,7 +122,7 @@ To add this skill to the Claude marketplace:
 To update an already installed plugin:
 
 ```bash
-/plugin update laravel-herd-worktree@harris-laravel-tools
+/plugin update laravel-herd-worktree@harrisrafto-laravel-tools
 ```
 
 ## License
