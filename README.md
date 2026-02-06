@@ -11,12 +11,14 @@ A Claude Code skill that automates setting up git worktrees for Laravel projects
 When you need to work on a feature branch in isolation, this skill:
 
 1. **Creates a git worktree** in `.worktrees/<branch-name>`
-2. **Links with Laravel Herd** to serve the worktree at `http://<branch-name>.test`
+2. **Links with Laravel Herd** to serve the worktree at `http://<project-name>-<branch-name>.test`
 3. **Configures environment** - copies and updates `.env` with correct URLs, session domains, and Sanctum settings
 4. **Installs dependencies** - runs `composer install` and `npm install`
 5. **Starts development** - kills stale Vite processes and starts fresh
 
 It also handles cleanup and PR creation when you're done.
+
+**Why project name + branch name?** This prevents conflicts when multiple projects have the same branch (e.g., both `project-a` and `project-b` have a `feature/login` branch).
 
 ## Prerequisites
 
@@ -83,12 +85,12 @@ If your project requires specific composer flags (like `--ignore-platform-reqs`)
 your-project/
 ├── .worktrees/
 │   └── feature-branch/      # Your isolated worktree
-│       ├── .env             # Configured for http://feature-branch.test
+│       ├── .env             # Configured for http://your-project-feature-branch.test
 │       ├── vendor/          # Fresh composer install
 │       └── node_modules/    # Fresh npm install
 ```
 
-Plus a Herd site at `http://feature-branch.test`
+Plus a Herd site at `http://your-project-feature-branch.test`
 
 ## Common Issues
 

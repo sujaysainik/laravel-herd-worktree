@@ -42,9 +42,29 @@ All question blocks in this skill (shown in YAML-like format) should be implemen
 
 ## Setup Steps
 
-### 0. Get Branch Name
+### 0. Get Project Name and Branch Name
 
-**Use AskUserQuestion to get the branch name:**
+**First, detect the project name** (used for the Herd site URL to avoid conflicts between projects with the same branch name):
+
+```bash
+# Get project name from the directory name
+PROJECT_NAME=$(basename "$PWD")
+```
+
+**Use AskUserQuestion to confirm or customize the project name:**
+
+```
+AskUserQuestion:
+  question: "Project name detected as '$PROJECT_NAME'. This will be used for the Herd URL (e.g., projectname-branchname.test). Is this correct?"
+  header: "Project"
+  options:
+    - label: "Yes, use '$PROJECT_NAME'"
+      description: "Use the detected project name"
+    - label: "Use a different name"
+      description: "I'll provide a custom project name"
+```
+
+**Then use AskUserQuestion to get the branch name:**
 
 ```
 AskUserQuestion:
@@ -59,7 +79,13 @@ AskUserQuestion:
       description: "Experimental/testing branch"
 ```
 
-**Note:** The branch name will be sanitized for the Herd link (slashes replaced with dashes). For example, `feature/new-feature` becomes `feature-new-feature.test`.
+**Note:** Both project name and branch name will be sanitized for the Herd link (slashes replaced with dashes, spaces removed). For example, project `my-app` with branch `feature/new-feature` becomes `my-app-feature-new-feature.test`.
+
+**Construct the site name:**
+```bash
+SANITIZED_BRANCH_NAME=$(echo "$BRANCH_NAME" | tr '/' '-')
+SITE_NAME="$PROJECT_NAME-$SANITIZED_BRANCH_NAME"
+```
 
 ### 1. Create Worktree (if needed)
 
@@ -74,13 +100,15 @@ git worktree add .worktrees/$SANITIZED_BRANCH_NAME -b $BRANCH_NAME
 ### 2. Link with Laravel Herd
 
 ```bash
-cd /path/to/project/.worktrees/$BRANCH_NAME
-herd link $BRANCH_NAME
+cd /path/to/project/.worktrees/$SANITIZED_BRANCH_NAME
+herd link $SITE_NAME
 ```
 
-This creates a site at `http://$BRANCH_NAME.test`
+This creates a site at `http://$SITE_NAME.test` (e.g., `http://myproject-feature-branch.test`)
 
 **Note:** Do NOT run `herd secure` - the site should use HTTP to match the Vite dev server.
+
+**Why include project name?** This prevents conflicts when multiple projects have the same branch name (e.g., both `project-a` and `project-b` have a `feature/login` branch).
 
 ### 3. Copy and Configure .env
 
@@ -89,13 +117,13 @@ This creates a site at `http://$BRANCH_NAME.test`
 cp /path/to/main/project/.env /path/to/worktree/.env
 
 # Update APP_URL to match Herd site (use HTTP, not HTTPS)
-sed -i '' "s|APP_URL=.*|APP_URL=http://$BRANCH_NAME.test|" /path/to/worktree/.env
+sed -i '' "s|APP_URL=.*|APP_URL=http://$SITE_NAME.test|" /path/to/worktree/.env
 
 # Update SESSION_DOMAIN to match the worktree domain
-sed -i '' "s|SESSION_DOMAIN=.*|SESSION_DOMAIN=$BRANCH_NAME.test|" /path/to/worktree/.env
+sed -i '' "s|SESSION_DOMAIN=.*|SESSION_DOMAIN=$SITE_NAME.test|" /path/to/worktree/.env
 
 # Add worktree domain to SANCTUM_STATEFUL_DOMAINS (for API auth, if using Sanctum)
-sed -i '' "s|SANCTUM_STATEFUL_DOMAINS=\(.*\)|SANCTUM_STATEFUL_DOMAINS=\1,$BRANCH_NAME.test|" /path/to/worktree/.env
+sed -i '' "s|SANCTUM_STATEFUL_DOMAINS=\(.*\)|SANCTUM_STATEFUL_DOMAINS=\1,$SITE_NAME.test|" /path/to/worktree/.env
 
 # Ensure secure cookies are disabled for HTTP
 echo "SESSION_SECURE_COOKIE=false" >> /path/to/worktree/.env
@@ -270,8 +298,8 @@ pkill -f "node.*vite" 2>/dev/null
 
 # From main project directory
 cd /path/to/main/project
-herd unlink $BRANCH_NAME
-git worktree remove .worktrees/$BRANCH_NAME
+herd unlink $SITE_NAME
+git worktree remove .worktrees/$SANITIZED_BRANCH_NAME
 git branch -d TASK_NUMBER-branch-name  # Delete local branch
 ```
 
@@ -325,10 +353,10 @@ After the merge is staged:
 
 ```bash
 # Unlink from Herd
-herd unlink $BRANCH_NAME
+herd unlink $SITE_NAME
 
 # Remove the worktree
-git worktree remove .worktrees/$BRANCH_NAME
+git worktree remove .worktrees/$SANITIZED_BRANCH_NAME
 
 # Delete the worktree branch (it's now merged)
 git branch -D $BRANCH_NAME
@@ -355,10 +383,10 @@ When abandoning a worktree without merging:
 pkill -f "node.*vite" 2>/dev/null
 
 # Unlink from Herd
-herd unlink $BRANCH_NAME
+herd unlink $SITE_NAME
 
 # Remove worktree
-git worktree remove .worktrees/$BRANCH_NAME
+git worktree remove .worktrees/$SANITIZED_BRANCH_NAME
 
 # Delete branch if not needed
 git branch -D $BRANCH_NAME
@@ -366,19 +394,25 @@ git branch -D $BRANCH_NAME
 
 ## Quick Reference
 
+**Variables:**
+- `$PROJECT_NAME` - The project directory name (e.g., `my-laravel-app`)
+- `$BRANCH_NAME` - The git branch name (e.g., `feature/login`)
+- `$SANITIZED_BRANCH_NAME` - Branch name with slashes replaced by dashes (e.g., `feature-login`)
+- `$SITE_NAME` - Combined name for Herd: `$PROJECT_NAME-$SANITIZED_BRANCH_NAME` (e.g., `my-laravel-app-feature-login`)
+
 | Step | Command |
 |------|---------|
-| Create worktree | `git worktree add .worktrees/NAME -b NAME` |
-| Link to Herd | `herd link NAME` |
+| Create worktree | `git worktree add .worktrees/$SANITIZED_BRANCH_NAME -b $BRANCH_NAME` |
+| Link to Herd | `herd link $SITE_NAME` |
 | Copy .env | `cp ../../../.env .env` |
-| Update APP_URL | `sed -i '' "s\|APP_URL=.*\|APP_URL=http://NAME.test\|" .env` |
+| Update APP_URL | `sed -i '' "s\|APP_URL=.*\|APP_URL=http://$SITE_NAME.test\|" .env` |
 | Install PHP deps | `composer install --no-interaction` |
 | Install Node deps | `npm install` |
 | Clear cache | `php artisan config:clear && php artisan cache:clear` |
 | Kill old Vite | `pkill -f "node.*vite"` |
 | Start dev | `npm run dev` |
-| Unlink | `herd unlink NAME` |
-| Remove worktree | `git worktree remove .worktrees/NAME` |
+| Unlink | `herd unlink $SITE_NAME` |
+| Remove worktree | `git worktree remove .worktrees/$SANITIZED_BRANCH_NAME` |
 
 ## Common Issues
 
@@ -386,14 +420,14 @@ git branch -D $BRANCH_NAME
 - **Cause:** SANCTUM_STATEFUL_DOMAINS doesn't include the worktree domain
 - **Symptoms:** Login works but API calls return 401
 - **Fix:**
-  1. Add worktree domain to SANCTUM_STATEFUL_DOMAINS in .env
+  1. Add worktree domain to SANCTUM_STATEFUL_DOMAINS in .env (use `$SITE_NAME.test`)
   2. Run `php artisan config:clear`
 
 ### Cookie rejected for invalid domain
 - **Cause:** SESSION_DOMAIN in .env doesn't match the worktree site domain
 - **Symptoms:** Console shows "Cookie has been rejected for invalid domain"
 - **Fix:**
-  1. Update SESSION_DOMAIN in .env: `SESSION_DOMAIN=$BRANCH_NAME.test`
+  1. Update SESSION_DOMAIN in .env: `SESSION_DOMAIN=$SITE_NAME.test`
   2. Add `SESSION_SECURE_COOKIE=false` for HTTP sites
   3. Run `php artisan config:clear`
   4. Clear browser cookies for the domain (or use incognito)
@@ -405,11 +439,11 @@ git branch -D $BRANCH_NAME
   1. Update vite.config.js to use `host: 'localhost'` and `cors: true`
   2. Restart Vite: `npm run dev`
 
-### White page / Mixed Content Error
+### Mixed Content Error
 - **Cause:** HTTPS site trying to load HTTP Vite assets
 - **Symptoms:** Console shows "Mixed Content" errors
 - **Fix:**
-  1. Unsecure the site: `herd unsecure $BRANCH_NAME`
+  1. Unsecure the site: `herd unsecure $SITE_NAME`
   2. Update APP_URL to use `http://` instead of `https://`
   3. Run `php artisan config:clear`
   4. Restart Vite
@@ -449,18 +483,18 @@ git branch -D $BRANCH_NAME
 
 Before considering setup complete, verify:
 
-- [ ] Worktree created at `.worktrees/$BRANCH_NAME`
-- [ ] Herd link created (`herd link $BRANCH_NAME`)
+- [ ] Worktree created at `.worktrees/$SANITIZED_BRANCH_NAME`
+- [ ] Herd link created (`herd link $SITE_NAME`)
 - [ ] Site is NOT secured (use HTTP, not HTTPS)
 - [ ] vite.config.js has `host: 'localhost'` and `cors: true`
-- [ ] .env copied and APP_URL updated (use `http://`)
-- [ ] SESSION_DOMAIN updated to match worktree domain
+- [ ] .env copied and APP_URL updated to `http://$SITE_NAME.test`
+- [ ] SESSION_DOMAIN updated to `$SITE_NAME.test`
 - [ ] SESSION_SECURE_COOKIE=false added for HTTP
 - [ ] `composer install` completed successfully
 - [ ] `npm install` completed successfully
 - [ ] Old Vite processes killed
 - [ ] `npm run dev` running from worktree directory
-- [ ] Site accessible at `http://$BRANCH_NAME.test` (no white page)
+- [ ] Site accessible at `http://$SITE_NAME.test` (no white page)
 
 ## CRITICAL: Working Directory After Setup
 
@@ -468,12 +502,12 @@ Before considering setup complete, verify:
 
 The worktree is a separate copy of the codebase. Using the main repo path will edit the wrong files.
 
-- **Worktree path:** `/path/to/project/.worktrees/$BRANCH_NAME/`
-- **All file reads, edits, and writes** must use the worktree absolute path (e.g., `/path/to/project/.worktrees/$BRANCH_NAME/app/...`)
+- **Worktree path:** `/path/to/project/.worktrees/$SANITIZED_BRANCH_NAME/`
+- **All file reads, edits, and writes** must use the worktree absolute path (e.g., `/path/to/project/.worktrees/$SANITIZED_BRANCH_NAME/app/...`)
 - **All Bash commands** (artisan, tests, pint, etc.) must run from the worktree directory
 - **All git operations** must run from the worktree directory
 
-**After setup, remind the user and any subsequent agents:** "All work for this task should use the worktree at `/path/to/project/.worktrees/$BRANCH_NAME/`. Do not modify files in the main project directory."
+**After setup, remind the user and any subsequent agents:** "All work for this task should use the worktree at `/path/to/project/.worktrees/$SANITIZED_BRANCH_NAME/`. The site is accessible at `http://$SITE_NAME.test`. Do not modify files in the main project directory."
 
 ## Integration
 
