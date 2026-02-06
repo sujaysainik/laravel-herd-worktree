@@ -94,13 +94,13 @@ SITE_NAME="$PROJECT_NAME-$SANITIZED_BRANCH_NAME"
 git worktree list | grep "$BRANCH_NAME"
 
 # If not, create it
-git worktree add .worktrees/$SANITIZED_BRANCH_NAME -b $BRANCH_NAME
+git worktree add .worktrees/$SITE_NAME -b $BRANCH_NAME
 ```
 
 ### 2. Link with Laravel Herd
 
 ```bash
-cd /path/to/project/.worktrees/$SANITIZED_BRANCH_NAME
+cd /path/to/project/.worktrees/$SITE_NAME
 herd link $SITE_NAME
 ```
 
@@ -299,7 +299,7 @@ pkill -f "node.*vite" 2>/dev/null
 # From main project directory
 cd /path/to/main/project
 herd unlink $SITE_NAME
-git worktree remove .worktrees/$SANITIZED_BRANCH_NAME
+git worktree remove .worktrees/$SITE_NAME
 git branch -d TASK_NUMBER-branch-name  # Delete local branch
 ```
 
@@ -356,7 +356,7 @@ After the merge is staged:
 herd unlink $SITE_NAME
 
 # Remove the worktree
-git worktree remove .worktrees/$SANITIZED_BRANCH_NAME
+git worktree remove .worktrees/$SITE_NAME
 
 # Delete the worktree branch (it's now merged)
 git branch -D $BRANCH_NAME
@@ -386,7 +386,7 @@ pkill -f "node.*vite" 2>/dev/null
 herd unlink $SITE_NAME
 
 # Remove worktree
-git worktree remove .worktrees/$SANITIZED_BRANCH_NAME
+git worktree remove .worktrees/$SITE_NAME
 
 # Delete branch if not needed
 git branch -D $BRANCH_NAME
@@ -402,7 +402,7 @@ git branch -D $BRANCH_NAME
 
 | Step | Command |
 |------|---------|
-| Create worktree | `git worktree add .worktrees/$SANITIZED_BRANCH_NAME -b $BRANCH_NAME` |
+| Create worktree | `git worktree add .worktrees/$SITE_NAME -b $BRANCH_NAME` |
 | Link to Herd | `herd link $SITE_NAME` |
 | Copy .env | `cp ../../../.env .env` |
 | Update APP_URL | `sed -i '' "s\|APP_URL=.*\|APP_URL=http://$SITE_NAME.test\|" .env` |
@@ -412,7 +412,7 @@ git branch -D $BRANCH_NAME
 | Kill old Vite | `pkill -f "node.*vite"` |
 | Start dev | `npm run dev` |
 | Unlink | `herd unlink $SITE_NAME` |
-| Remove worktree | `git worktree remove .worktrees/$SANITIZED_BRANCH_NAME` |
+| Remove worktree | `git worktree remove .worktrees/$SITE_NAME` |
 
 ## Common Issues
 
@@ -483,7 +483,7 @@ git branch -D $BRANCH_NAME
 
 Before considering setup complete, verify:
 
-- [ ] Worktree created at `.worktrees/$SANITIZED_BRANCH_NAME`
+- [ ] Worktree created at `.worktrees/$SITE_NAME`
 - [ ] Herd link created (`herd link $SITE_NAME`)
 - [ ] Site is NOT secured (use HTTP, not HTTPS)
 - [ ] vite.config.js has `host: 'localhost'` and `cors: true`
@@ -502,12 +502,12 @@ Before considering setup complete, verify:
 
 The worktree is a separate copy of the codebase. Using the main repo path will edit the wrong files.
 
-- **Worktree path:** `/path/to/project/.worktrees/$SANITIZED_BRANCH_NAME/`
-- **All file reads, edits, and writes** must use the worktree absolute path (e.g., `/path/to/project/.worktrees/$SANITIZED_BRANCH_NAME/app/...`)
+- **Worktree path:** `/path/to/project/.worktrees/$SITE_NAME/`
+- **All file reads, edits, and writes** must use the worktree absolute path (e.g., `/path/to/project/.worktrees/$SITE_NAME/app/...`)
 - **All Bash commands** (artisan, tests, pint, etc.) must run from the worktree directory
 - **All git operations** must run from the worktree directory
 
-**After setup, remind the user and any subsequent agents:** "All work for this task should use the worktree at `/path/to/project/.worktrees/$SANITIZED_BRANCH_NAME/`. The site is accessible at `http://$SITE_NAME.test`. Do not modify files in the main project directory."
+**After setup, remind the user and any subsequent agents:** "All work for this task should use the worktree at `/path/to/project/.worktrees/$SITE_NAME/`. The site is accessible at `http://$SITE_NAME.test`. Do not modify files in the main project directory."
 
 ## Integration
 
